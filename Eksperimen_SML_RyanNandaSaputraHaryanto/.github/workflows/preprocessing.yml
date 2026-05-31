@@ -1,0 +1,46 @@
+name: Auto Preprocessing Pipeline
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'dataset_raw.csv'
+      - 'preprocessing/automate_Nama-siswa.py'
+  workflow_dispatch:   # trigger manual dari GitHub UI
+
+jobs:
+  preprocessing:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Checkout repository
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      # 2. Setup Python
+      - name: Setup Python 3.10
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      # 3. Install dependencies
+      - name: Install Dependencies
+        run: |
+          pip install pandas numpy scikit-learn
+
+      # 4. Jalankan script preprocessing otomatis
+      - name: Run Preprocessing
+        run: |
+          python preprocessing/automate_Nama-siswa.py \
+            --input dataset_raw.csv \
+            --output preprocessing/dataset_preprocessing/dataset_preprocessing.csv
+
+      # 5. Commit dan push hasil preprocessing kembali ke repo
+      - name: Commit Preprocessed Dataset
+        run: |
+          git config --local user.email "actions@github.com"
+          git config --local user.name "GitHub Actions"
+          git add preprocessing/dataset_preprocessing/dataset_preprocessing.csv
+          git diff --staged --quiet || git commit -m "chore: update dataset preprocessing [auto]"
+          git push
